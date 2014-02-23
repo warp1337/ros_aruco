@@ -7,10 +7,8 @@ project(ros_aruco)
 find_package(catkin REQUIRED COMPONENTS roscpp std_msgs sensor_msgs geometry_msgs message_generation genmsg)
 
 ## TODO: Make this configurable via variable
-SET(CMAKE_MODULE_PATH /lib/cmake )
-SET(ARUCO_INCLUDE_DIRS /include/aruco )
-# SET(ARUCO_LIBS /lib )
-
+SET(CMAKE_MODULE_PATH ${ARUCO_PATH}/lib/cmake )
+SET(ARUCO_INCLUDE_DIRS ${ARUCO_PATH}/include/aruco )
 
 ## System dependencies are found with CMake's conventions
 find_package(aruco REQUIRED )
