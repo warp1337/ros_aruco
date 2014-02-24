@@ -30,6 +30,9 @@ or implied, of Rafael Muñoz Salinas.
 #include <sstream>
 #include "aruco.h"
 #include "cvdrawingutils.h"
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+#include <tf/transform_broadcaster.h>
 using namespace cv;
 using namespace aruco;
 string TheInputVideo;
@@ -98,7 +101,14 @@ int main(int argc,char **argv)
             cerr<<"Could not open video"<<endl;
             return -1;
         }
-        // Read first image to get the dimensions
+        ros::init(argc, argv, "arucopublisher");
+	ros::NodeHandle n;
+	ros::Publisher aruco_pub = n.advertise<std_msgs::String>("arucopub", 1000);
+        ros::Rate loop_rate(40);
+        tf::TransformBroadcaster broadcaster;
+	// Useless counter
+	int count = 0;
+	// Read first image to get the dimensions
         TheVideoCapturer>>TheInputImage;
         // Read camera parameters if passed
         if (TheIntrinsicFile!="") {
@@ -122,6 +132,29 @@ int main(int argc,char **argv)
         // Capture until press ESC or until the end of the video
         while ( key!=27 && TheVideoCapturer.grab())
         {
+	    broadcaster.sendTransform(
+      		tf::StampedTransform(
+        	tf::Transform(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0.1, 0.0, 0.2)),
+        	ros::Time::now(),"base_camera", "base_marker")
+	    );
+	    /**
+            * This is a message object. You stuff it with data, and then publish it.
+            */
+            // std_msgs::String msg;
+    	    // std::stringstream ss;
+    	    // ss << "Publishing " << endl;
+    	    // msg.data = ss.str();
+    	    // ROS_INFO("%s", msg.data.c_str());
+    	    /**
+     	    * The publish() function is how you send messages. The parameter
+     	    * is the message object. The type of this object must agree with the type
+     	    * given as a template parameter to the advertise<>() call, as was done
+     	    * in the constructor above.
+     	    */
+    	    // aruco_pub.publish(msg);
+    	    // ros::spinOnce();
+    	    // loop_rate.sleep();
+    	    // ++count;
             TheVideoCapturer.retrieve( TheInputImage);
             // Copy image
             index++; // Number of images captured
