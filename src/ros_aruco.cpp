@@ -142,7 +142,7 @@ int main(int argc,char **argv)
             AvrgTime.first+=((double)getTickCount()-tick)/getTickFrequency();
             AvrgTime.second++;
             // Show the detection time
-	    cout<<"Time detection="<<1000*AvrgTime.first/AvrgTime.second<<" milliseconds"<<endl;
+	    // cout<<"Time detection="<<1000*AvrgTime.first/AvrgTime.second<<" milliseconds"<<endl;
             // Print marker info and draw the markers in image
             TheInputImage.copyTo(TheInputImageCopy);
             for (unsigned int i=0;i<TheMarkers.size();i++) {
