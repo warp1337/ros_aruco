@@ -103,7 +103,7 @@ int main(int argc,char **argv)
         }
         ros::init(argc, argv, "aruco_tf_publisher");
 	ros::NodeHandle n;
-        ros::Rate loop_rate(50);
+        ros::Rate loop_rate(100);
         tf::TransformBroadcaster broadcaster;
 	// Useless counter
 	int count = 0;
@@ -142,16 +142,16 @@ int main(int argc,char **argv)
             AvrgTime.first+=((double)getTickCount()-tick)/getTickFrequency();
             AvrgTime.second++;
             // Show the detection time
-	    // cout<<"Time detection="<<1000*AvrgTime.first/AvrgTime.second<<" milliseconds"<<endl;
+	    cout<<"Time detection="<<1000*AvrgTime.first/AvrgTime.second<<" milliseconds"<<endl;
             // Print marker info and draw the markers in image
             TheInputImage.copyTo(TheInputImageCopy);
             for (unsigned int i=0;i<TheMarkers.size();i++) {
                 // cout << TheMarkers[i] << endl;
                 // TheMarkers[i].draw(TheInputImageCopy,Scalar(0,0,255),1);
-                cout << "TVEC:" << TheMarkers[i].Tvec << endl;
-		cout << "RVEC:" << TheMarkers[i].Rvec << endl;
+                // cout << "TVEC:" << TheMarkers[i].Tvec << endl;
+		// cout << "RVEC:" << TheMarkers[i].Rvec << endl;
             }
-	    if (TheMarkers.size()>0)  {
+	    if ( (TheMarkers.size()>0) && (ros::ok()) )  {
 	    	float x_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[0];
 		float y_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[1];
 		float z_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[2];
@@ -171,7 +171,7 @@ int main(int argc,char **argv)
         		ros::Time::now(),"camera", "marker")
 	    	);
     	    	ros::spinOnce();
-    	    	loop_rate.sleep();
+    	    	// loop_rate.sleep();
             }
 	    // Print other rectangles that contains no valid markers
             /** for (unsigned int i=0;i<MDetector.getCandidates().size();i++) {
