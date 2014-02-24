@@ -101,10 +101,9 @@ int main(int argc,char **argv)
             cerr<<"Could not open video"<<endl;
             return -1;
         }
-        ros::init(argc, argv, "arucopublisher");
+        ros::init(argc, argv, "aruco_tf_publisher");
 	ros::NodeHandle n;
-	ros::Publisher aruco_pub = n.advertise<std_msgs::String>("arucopub", 1000);
-        ros::Rate loop_rate(40);
+        ros::Rate loop_rate(50);
         tf::TransformBroadcaster broadcaster;
 	// Useless counter
 	int count = 0;
@@ -132,29 +131,7 @@ int main(int argc,char **argv)
         // Capture until press ESC or until the end of the video
         while ( key!=27 && TheVideoCapturer.grab())
         {
-	    broadcaster.sendTransform(
-      		tf::StampedTransform(
-        	tf::Transform(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0.1, 0.0, 0.2)),
-        	ros::Time::now(),"base_camera", "base_marker")
-	    );
-	    /**
-            * This is a message object. You stuff it with data, and then publish it.
-            */
-            // std_msgs::String msg;
-    	    // std::stringstream ss;
-    	    // ss << "Publishing " << endl;
-    	    // msg.data = ss.str();
-    	    // ROS_INFO("%s", msg.data.c_str());
-    	    /**
-     	    * The publish() function is how you send messages. The parameter
-     	    * is the message object. The type of this object must agree with the type
-     	    * given as a template parameter to the advertise<>() call, as was done
-     	    * in the constructor above.
-     	    */
-    	    // aruco_pub.publish(msg);
-    	    // ros::spinOnce();
-    	    // loop_rate.sleep();
-    	    // ++count;
+	    // ++count;
             TheVideoCapturer.retrieve( TheInputImage);
             // Copy image
             index++; // Number of images captured
@@ -174,7 +151,29 @@ int main(int argc,char **argv)
                 cout << "TVEC:" << TheMarkers[i].Tvec << endl;
 		cout << "RVEC:" << TheMarkers[i].Rvec << endl;
             }
-            // Print other rectangles that contains no valid markers
+	    if (TheMarkers.size()>0)  {
+	    	float x_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[0];
+		float y_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[1];
+		float z_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[2];
+		float x_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[0];
+		float y_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[1];
+		float z_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[2];
+	    	// cout << "x_r" << x_r << endl;
+                // cout << "y_r" << y_r << endl;
+		// cout << "z_r" << z_r << endl;
+		// cout << "x_t" << x_t << endl;
+                // cout << "y_t" << y_t << endl;
+		// cout << "z_t" << z_t << endl;
+            	tf::Quaternion quat = tf::createQuaternionFromRPY(x_r, y_r, z_r);
+	    	broadcaster.sendTransform(
+      			tf::StampedTransform(
+        		tf::Transform(quat, tf::Vector3(x_t, y_t, z_t)),
+        		ros::Time::now(),"camera", "marker")
+	    	);
+    	    	ros::spinOnce();
+    	    	loop_rate.sleep();
+            }
+	    // Print other rectangles that contains no valid markers
             /** for (unsigned int i=0;i<MDetector.getCandidates().size();i++) {
                 aruco::Marker m( MDetector.getCandidates()[i],999);
                 m.draw(TheInputImageCopy,cv::Scalar(255,0,0));
@@ -190,7 +189,7 @@ int main(int argc,char **argv)
             // Show input with augmented information and  the thresholded image
 	    cv::imshow("in",TheInputImageCopy);
             cv::imshow("thres",MDetector.getThresholdedImage());
-            key=cv::waitKey(waitTime);//wait for key to be pressed
+            key=cv::waitKey(waitTime);
         }
     } catch (std::exception &ex)
     {
