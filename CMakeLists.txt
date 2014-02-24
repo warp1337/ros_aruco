@@ -90,11 +90,7 @@ include_directories(
 add_executable(ros_aruco
 	src/ros_aruco.cpp 
 )
-	
-add_executable(publisher
-        src/publisher.cpp
-)
-		
+			
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(ros_aruco ${catkin_EXPORTED_TARGETS})
@@ -103,10 +99,6 @@ target_link_libraries(ros_aruco
 	${catkin_LIBRARIES}
 	${OpenCV_LIBS}
 	${aruco_LIBS}
-)
-
-target_link_libraries(publisher
-        ${catkin_LIBRARIES}
 )
 
 #############
