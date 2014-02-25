@@ -43,7 +43,8 @@ http://www.uco.es/investiga/grupos/ava/node/26
 7) `source /opt/ros/YOUR_DISTRIBUTION/setup.bash`
 `cd ~/catkin_ws/ && catkin_make --pkg ros_aruco -DARUCO_PATH=/usr/local`
 
-You will need to reference the location of your ArUco installation by providing: -DARUCO_PATH=/PATH/TO/ARUCO
+You will need to reference the location of your ArUco installation by providing: 
+`-DARUCO_PATH=/PATH/TO/ARUCO`
 
 Hint: --pkg ros_aruco just builds the ros_aruco executable, not your whole catkin_workspace.
 
