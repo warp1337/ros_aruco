@@ -42,6 +42,7 @@ http://www.uco.es/investiga/grupos/ava/node/26
 `cd ~/catkin_ws/ && catkin_make --pkg ros_aruco -DARUCO_PATH=/usr/local`
 
 You will need to reference the location of your ArUco installation by providing: -DARUCO_PATH=/PATH/TO/ARUCO
+
 Hint: --pkg ros_aruco just builds the ros_aruco executable, not your whole catkin_workspace.
 
 8) Start a roscore in a separate shell. 
