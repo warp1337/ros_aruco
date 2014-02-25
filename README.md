@@ -16,7 +16,7 @@ relatively easy task. Feel free to fork me.
 
 [1] http://www.uco.es/investiga/grupos/ava/node/26
 
-INSTALL AND USAGE
+BUILDING AND USAGE
 ==================
 
 1) Install ROS, if neccessary.
