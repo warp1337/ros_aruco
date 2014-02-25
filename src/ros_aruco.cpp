@@ -1,6 +1,8 @@
 /*****************************************************************************************
 Copyright 2011 Rafael Muñoz Salinas. All rights reserved.
 
+ROS bits and integration added by Florian Lier flier at techfak dot uni-bielefeld dot de
+
 Redistribution and use in source and binary forms, with or without modification, are
 permitted provided that the following conditions are met:
 
@@ -32,6 +34,7 @@ or implied, of Rafael Muñoz Salinas.
 #include "cvdrawingutils.h"
 #include "ros/ros.h"
 #include <tf/transform_broadcaster.h>
+#include <geometry_msgs/Pose.h>
 using namespace cv;
 using namespace aruco;
 string TheInputVideo;
@@ -100,12 +103,12 @@ int main(int argc,char **argv)
             cerr<<"Could not open video"<<endl;
             return -1;
         }
+        // The ROS stuff
         ros::init(argc, argv, "aruco_tf_publisher");
 	ros::NodeHandle n;
         ros::Rate loop_rate(100);
+        ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("aruco_pose", 1000);
         tf::TransformBroadcaster broadcaster;
-	// Useless counter
-	int count = 0;
 	// Read first image to get the dimensions
         TheVideoCapturer>>TheInputImage;
         // Read camera parameters if passed
@@ -130,7 +133,6 @@ int main(int argc,char **argv)
         // Capture until press ESC or until the end of the video
         while ( key!=27 && TheVideoCapturer.grab())
         {
-	    // ++count;
             TheVideoCapturer.retrieve( TheInputImage);
             // Copy image
             index++; // Number of images captured
@@ -169,8 +171,17 @@ int main(int argc,char **argv)
         		tf::Transform(quat, tf::Vector3(x_t, y_t, z_t)),
         		ros::Time::now(),"camera", "marker")
 	    	);
-    	    	ros::spinOnce();
-    	    	loop_rate.sleep();
+                // Now publish the pose message
+                geometry_msgs::Pose msg;
+                msg.position.x = x_t;
+		msg.position.y = y_t;
+		msg.position.z = z_t;
+                geometry_msgs::Quaternion p_quat = tf::createQuaternionMsgFromRollPitchYaw(x_r, y_r, z_r);
+		msg.orientation = p_quat;
+                pose_pub.publish(msg);
+                // tf::quaternionTFToMsg(const Quaternion &bt, geometry_msgs::Quaternion &msg)
+      	    	ros::spinOnce();
+    	        loop_rate.sleep();
             }
 	    // Print other rectangles that contains no valid markers
             /** for (unsigned int i=0;i<MDetector.getCandidates().size();i++) {
