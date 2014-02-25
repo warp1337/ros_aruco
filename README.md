@@ -41,21 +41,25 @@ http://www.uco.es/investiga/grupos/ava/node/26
 6) `git clone https://github.com/warp1337/ros_aruco.git .`
 
 7) `source /opt/ros/YOUR_DISTRIBUTION/setup.bash`
+
 `cd ~/catkin_ws/ && catkin_make --pkg ros_aruco -DARUCO_PATH=/usr/local`
 
 You will need to reference the location of your ArUco installation by providing: 
+
 `-DARUCO_PATH=/PATH/TO/ARUCO`
 
 Hint: --pkg ros_aruco just builds the ros_aruco executable, not your whole catkin_workspace.
 
 8) Start a roscore in a separate shell. 
 `source /opt/ros/YOUR_DISTRIBUTION/setup.bash`
+
 `roscore` 
 
 8) `cd ~/catkin_ws/build/ros_aruco`
 
 9) Now you will be able to run the tracker, as a first example just run:
 `source /opt/ros/YOUR_DISTRIBUTION/setup.bash`
+
 `./ros_aruco live`
 
 You should now be able to track an ArUco marker, however you will not get any real world coordinates
@@ -65,12 +69,15 @@ If you are familiar with it, go on, if not please refer to: https://github.com/w
 10) In case you calibrated your camera please measure the size of your marker (in metres).
 Now fire up the tracker and provide the camera calibration file (obtained during calibration) and the size
 of your marker as parameters:
+
 `./ros_aruco live /path/to/calibration/file MARKERSIZE`
+
 `./ros_aruco live ../../src/ros_aruco/data/logitech_9000_intrinsics.yml 0.08`
 
 An exemplary calibration file (for the Logitech 9000 HD web cam) is located in this git repo (data folder).
 
 11) In another shell source the setup.bash as explained earlier and fire up:
+
 `rostopic echo /tf`
 
 Real world coordinates of your marker are published in this topic.
