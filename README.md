@@ -51,6 +51,7 @@ You will need to reference the location of your ArUco installation by providing:
 Hint: --pkg ros_aruco just builds the ros_aruco executable, not your whole catkin_workspace.
 
 8) Start a roscore in a separate shell. 
+
 `source /opt/ros/YOUR_DISTRIBUTION/setup.bash`
 
 `roscore` 
