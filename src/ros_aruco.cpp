@@ -31,7 +31,6 @@ or implied, of Rafael Muñoz Salinas.
 #include "aruco.h"
 #include "cvdrawingutils.h"
 #include "ros/ros.h"
-#include "std_msgs/String.h"
 #include <tf/transform_broadcaster.h>
 using namespace cv;
 using namespace aruco;
@@ -171,7 +170,7 @@ int main(int argc,char **argv)
         		ros::Time::now(),"camera", "marker")
 	    	);
     	    	ros::spinOnce();
-    	    	// loop_rate.sleep();
+    	    	loop_rate.sleep();
             }
 	    // Print other rectangles that contains no valid markers
             /** for (unsigned int i=0;i<MDetector.getCandidates().size();i++) {
