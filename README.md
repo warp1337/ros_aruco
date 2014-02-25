@@ -6,7 +6,7 @@ WHY
 This is a ros package wrapping the lightweight and fast ArUco[1] marker 
 tracking library. The usage of this package is, on purpose, straight forward 
 and the features are simple/limited. This software tracks a single marker and 
-publishes its ROTATION and TRANSLATION coordinates via ROS middleware (TF tree). 
+publishes its ROTATION and TRANSLATION coordinates via ROS middleware (TF and Pose). 
 The main advantages of this package are a) publishing of "real world" coordinates, 
 i.e., distance in metres b) high frequency data streaming of coodinates, the 
 bottleneck currently is the FPS count of your camera. Marker detection and 
@@ -80,6 +80,7 @@ An exemplary calibration file (for the Logitech 9000 HD web cam) is located in t
 11) In another shell source the setup.bash as explained earlier and fire up:
 
 `rostopic echo /tf`
+`rostopic echo /aruco_pose`
 
 Real world coordinates of your marker are published in this topic.
 
