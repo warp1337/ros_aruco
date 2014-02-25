@@ -16,8 +16,8 @@ relatively easy task. Feel free to fork me.
 
 [1] http://www.uco.es/investiga/grupos/ava/node/26
 
-INSTALL
-========
+INSTALL AND USAGE
+==================
 
 1) Install ROS, if neccessary.
 http://wiki.ros.org/ROS/Installation
@@ -73,3 +73,9 @@ An exemplary calibration file (for the Logitech 9000 HD web cam) is located in t
 Real world coordinates of your marker are published in this topic.
 
 12) Have fun.
+
+
+TODO
+=====
+
+Add install target for CMAKE file ;)
