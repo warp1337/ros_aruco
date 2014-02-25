@@ -1,4 +1,4 @@
-![ArUco ROS Marker Tracking](https://github.com/warp1337/ros_aruco/blob/master/data/ros_aruco.jpg "ROS ArUco")
+![ArUco ROS Marker Tracking](https://raw.github.com/warp1337/ros_aruco/master/data/ros_aruco.jpg "ROS ArUco")
 
 WHY
 ====
