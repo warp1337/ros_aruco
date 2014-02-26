@@ -30,6 +30,7 @@ or implied, of Rafael Muñoz Salinas.
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <math.h>
 #include "aruco.h"
 #include "cvdrawingutils.h"
 #include "ros/ros.h"
@@ -54,12 +55,6 @@ double ThresParam1,ThresParam2;
 int iThresParam1,iThresParam2;
 int waitTime=0;
 
-/************************************
- *
- *
- *
- *
- ************************************/
 bool readArguments ( int argc,char **argv )
 {
     if (argc<2) {
@@ -77,12 +72,7 @@ bool readArguments ( int argc,char **argv )
         cerr<< "NOTE: You need makersize to see 3d info!!!!" <<endl;
     return true;
 }
-/************************************
- *
- *
- *
- *
- ************************************/
+
 int main(int argc,char **argv)
 {
     try
@@ -153,19 +143,31 @@ int main(int argc,char **argv)
 		// cout << "RVEC:" << TheMarkers[i].Rvec << endl;
             }
 	    if ( (TheMarkers.size()>0) && (ros::ok()) )  {
-	    	float x_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[0];
-		float y_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[1];
-		float z_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[2];
+	    	// float x_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[0];
+		// float y_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[1];
+		// float z_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[2];
 		float x_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[0];
 		float y_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[1];
 		float z_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[2];
-	    	// cout << "x_r" << x_r << endl;
-                // cout << "y_r" << y_r << endl;
-		// cout << "z_r" << z_r << endl;
-		// cout << "x_t" << x_t << endl;
-                // cout << "y_t" << y_t << endl;
-		// cout << "z_t" << z_t << endl;
-            	tf::Quaternion quat = tf::createQuaternionFromRPY(x_r, y_r, z_r);
+		// cout << "RVEC " << TheMarkers[0].Rvec << endl;
+                // cout << "TVEC " << TheMarkers[0].Tvec << endl;
+                // cout << "x_r " << x_r << endl;
+                // cout << "y_r " << y_r << endl;
+		// cout << "z_r " << z_r << endl;
+		// cout << "x_t " << x_t << endl;
+                // cout << "y_t " << y_t << endl;
+		// cout << "z_t " << z_t << endl;
+                cv::Mat rot_mat(3,3,cv::DataType<float>::type);
+                // You need to apply cv::Rodrigues() in order to obatain angles wrt to camera coords
+                cv::Rodrigues(TheMarkers[0].Rvec,rot_mat);
+            	// cout << "post cv::Rodrigues() " << endl;
+                float pitch   = atan2(rot_mat.at<float>(2,0), rot_mat.at<float>(2,1));
+                float yaw = acos(rot_mat.at<float>(2,2));
+                float roll  = -atan2(rot_mat.at<float>(0,2), rot_mat.at<float>(1,2));
+                // See: http://en.wikipedia.org/wiki/Flight_dynamics
+                cout << "Angles in degree wrt Flight Dynamics -- roll: " << roll*(180.0/CV_PI) << " pitch " << pitch*(180.0/CV_PI) << " yaw " << yaw*(180.0/CV_PI) << endl;
+                cout << "Marker distance in metres -- x " << x_t << " y " << y_t << " z " << z_t << endl;
+                tf::Quaternion quat = tf::createQuaternionFromRPY(roll, pitch, yaw);
 	    	broadcaster.sendTransform(
       			tf::StampedTransform(
         		tf::Transform(quat, tf::Vector3(x_t, y_t, z_t)),
@@ -176,7 +178,7 @@ int main(int argc,char **argv)
                 msg.position.x = x_t;
 		msg.position.y = y_t;
 		msg.position.z = z_t;
-                geometry_msgs::Quaternion p_quat = tf::createQuaternionMsgFromRollPitchYaw(x_r, y_r, z_r);
+                geometry_msgs::Quaternion p_quat = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, yaw);
 		msg.orientation = p_quat;
                 pose_pub.publish(msg);
                 // tf::quaternionTFToMsg(const Quaternion &bt, geometry_msgs::Quaternion &msg)
@@ -206,12 +208,6 @@ int main(int argc,char **argv)
         cout<<"Exception :"<<ex.what()<<endl;
     }
 }
-/************************************
- *
- *
- *
- *
- ************************************/
 
 void cvTackBarEvents(int pos,void*)
 {
