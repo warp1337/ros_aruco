@@ -55,6 +55,11 @@ double ThresParam1,ThresParam2;
 int iThresParam1,iThresParam2;
 int waitTime=0;
 
+float round(float f,float pres)
+{
+    return (float) (floor(f*(1.0f/pres) + 0.5)/(1.0f/pres));
+}
+
 bool readArguments ( int argc,char **argv )
 {
     if (argc<2) {
@@ -165,8 +170,8 @@ int main(int argc,char **argv)
                 float yaw = acos(rot_mat.at<float>(2,2));
                 float roll  = -atan2(rot_mat.at<float>(0,2), rot_mat.at<float>(1,2));
                 // See: http://en.wikipedia.org/wiki/Flight_dynamics
-                cout << "Angles in degree wrt Flight Dynamics -- roll: " << roll*(180.0/CV_PI) << " pitch " << pitch*(180.0/CV_PI) << " yaw " << yaw*(180.0/CV_PI) << endl;
-                cout << "Marker distance in metres -- x " << x_t << " y " << y_t << " z " << z_t << endl;
+                printf( "Angles (deg) wrt Flight Dynamics -- roll:%5.2f pitch:%5.2f yaw:%5.2f \n", roll*(180.0/CV_PI), pitch*(180.0/CV_PI), yaw*(180.0/CV_PI));
+                printf( "Marker distance in metres        -- x_dist: %5.2f y_dist: %5.2f z_dist: %5.2f \n", x_t, y_t, z_t);
                 tf::Quaternion quat = tf::createQuaternionFromRPY(roll, pitch, yaw);
 	    	broadcaster.sendTransform(
       			tf::StampedTransform(
