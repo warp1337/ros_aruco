@@ -55,11 +55,6 @@ double ThresParam1,ThresParam2;
 int iThresParam1,iThresParam2;
 int waitTime=0;
 
-float round(float f,float pres)
-{
-    return (float) (floor(f*(1.0f/pres) + 0.5)/(1.0f/pres));
-}
-
 bool readArguments ( int argc,char **argv )
 {
     if (argc<2) {
@@ -98,11 +93,12 @@ int main(int argc,char **argv)
             cerr<<"Could not open video"<<endl;
             return -1;
         }
-        // The ROS stuff
+        // ROS messaging init
         ros::init(argc, argv, "aruco_tf_publisher");
 	ros::NodeHandle n;
         ros::Rate loop_rate(100);
-        ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("aruco_pose", 1000);
+        // Publish pose message and buffer up to 100 messages
+        ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("aruco_pose", 100);
         tf::TransformBroadcaster broadcaster;
 	// Read first image to get the dimensions
         TheVideoCapturer>>TheInputImage;
@@ -139,54 +135,47 @@ int main(int argc,char **argv)
             AvrgTime.second++;
             // Show the detection time
 	    // cout<<"Time detection="<<1000*AvrgTime.first/AvrgTime.second<<" milliseconds"<<endl;
-            // Print marker info and draw the markers in image
             TheInputImage.copyTo(TheInputImageCopy);
+            /*
             for (unsigned int i=0;i<TheMarkers.size();i++) {
-                // cout << TheMarkers[i] << endl;
-                // TheMarkers[i].draw(TheInputImageCopy,Scalar(0,0,255),1);
-                // cout << "TVEC:" << TheMarkers[i].Tvec << endl;
-		// cout << "RVEC:" << TheMarkers[i].Rvec << endl;
+                cout << TheMarkers[i] << endl;
+                TheMarkers[i].draw(TheInputImageCopy,Scalar(0,0,255),1);
+                cout << "TVEC:" << TheMarkers[i].Tvec << endl;
+		cout << "RVEC:" << TheMarkers[i].Rvec << endl;
             }
+            */
 	    if ( (TheMarkers.size()>0) && (ros::ok()) )  {
-	    	// float x_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[0];
-		// float y_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[1];
-		// float z_r = TheMarkers[0].Rvec.at<Vec3f>(0,0)[2];
 		float x_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[0];
 		float y_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[1];
 		float z_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[2];
-		// cout << "RVEC " << TheMarkers[0].Rvec << endl;
-                // cout << "TVEC " << TheMarkers[0].Tvec << endl;
-                // cout << "x_r " << x_r << endl;
-                // cout << "y_r " << y_r << endl;
-		// cout << "z_r " << z_r << endl;
-		// cout << "x_t " << x_t << endl;
-                // cout << "y_t " << y_t << endl;
-		// cout << "z_t " << z_t << endl;
                 cv::Mat rot_mat(3,3,cv::DataType<float>::type);
                 // You need to apply cv::Rodrigues() in order to obatain angles wrt to camera coords
                 cv::Rodrigues(TheMarkers[0].Rvec,rot_mat);
-            	// cout << "post cv::Rodrigues() " << endl;
                 float pitch   = atan2(rot_mat.at<float>(2,0), rot_mat.at<float>(2,1));
-                float yaw = acos(rot_mat.at<float>(2,2));
-                float roll  = -atan2(rot_mat.at<float>(0,2), rot_mat.at<float>(1,2));
+                float yaw     = acos(rot_mat.at<float>(2,2));
+                float roll    = -atan2(rot_mat.at<float>(0,2), rot_mat.at<float>(1,2));
+                // Marker rotation should be initially zero (just for convenience)
+                float p_off = CV_PI;
+                float r_off = CV_PI/2;
+                float y_off = CV_PI/2;
                 // See: http://en.wikipedia.org/wiki/Flight_dynamics
-                printf( "Angles (deg) wrt Flight Dynamics -- roll:%5.2f pitch:%5.2f yaw:%5.2f \n", roll*(180.0/CV_PI), pitch*(180.0/CV_PI), yaw*(180.0/CV_PI));
-                printf( "Marker distance in metres        -- x_dist: %5.2f y_dist: %5.2f z_dist: %5.2f \n", x_t, y_t, z_t);
-                tf::Quaternion quat = tf::createQuaternionFromRPY(roll, pitch, yaw);
+                printf( "Angles (deg) wrt Flight Dynamics: roll:%5.2f pitch:%5.2f yaw:%5.2f \n", (roll-r_off)*(180.0/CV_PI), (pitch-p_off)*(180.0/CV_PI), (yaw-y_off)*(180.0/CV_PI));
+                printf( "Marker distance in metres:         x_d:%5.2f   y_d:%5.2f z_d:%5.2f \n", x_t, y_t, z_t);
+                // Publish TF message including the offsets
+                tf::Quaternion quat = tf::createQuaternionFromRPY(roll-p_off, pitch+p_off, yaw-y_off);
 	    	broadcaster.sendTransform(
       			tf::StampedTransform(
         		tf::Transform(quat, tf::Vector3(x_t, y_t, z_t)),
         		ros::Time::now(),"camera", "marker")
 	    	);
-                // Now publish the pose message
+                // Now publish the pose message, remember the offsets
                 geometry_msgs::Pose msg;
                 msg.position.x = x_t;
 		msg.position.y = y_t;
 		msg.position.z = z_t;
-                geometry_msgs::Quaternion p_quat = tf::createQuaternionMsgFromRollPitchYaw(roll, pitch, yaw);
+                geometry_msgs::Quaternion p_quat = tf::createQuaternionMsgFromRollPitchYaw(roll-r_off, pitch+p_off, yaw-y_off);
 		msg.orientation = p_quat;
                 pose_pub.publish(msg);
-                // tf::quaternionTFToMsg(const Quaternion &bt, geometry_msgs::Quaternion &msg)
       	    	ros::spinOnce();
     	        loop_rate.sleep();
             }
