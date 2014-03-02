@@ -31,11 +31,15 @@ or implied, of Rafael Muñoz Salinas.
 #include <fstream>
 #include <sstream>
 #include <math.h>
+#include <unistd.h>
 #include "aruco.h"
 #include "cvdrawingutils.h"
 #include "ros/ros.h"
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Pose.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
 using namespace cv;
 using namespace aruco;
 string TheInputVideo;
@@ -53,13 +57,57 @@ bool readCameraParameters(string TheIntrinsicFile,CameraParameters &CP,Size size
 pair<double,double> AvrgTime(0,0) ;
 double ThresParam1,ThresParam2;
 int iThresParam1,iThresParam2;
-int waitTime=0;
+int waitTime=5;
+static const std::string OPENCV_WINDOW = "ROS_ARUCO ar_follow INPUT";
+
+
+class ImageConverter
+{
+  ros::NodeHandle nh_;
+  image_transport::ImageTransport it_;
+  image_transport::Subscriber image_sub_;
+  Mat img;
+
+public:
+  ImageConverter()
+    : it_(nh_)
+  {
+    // subscribe to input video feed and publish output video feed
+    image_sub_ = it_.subscribe("/ar_follow/image", 1, &ImageConverter::imageCb, this);
+  }
+
+  ~ImageConverter()
+  {
+   printf("Stopped Image Import");
+  }
+
+  cv::Mat getCurrentImage() {
+        return img;
+  }
+
+  void imageCb(const sensor_msgs::ImageConstPtr& msg)
+  {
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+      cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return;
+    }
+
+    img = cv_ptr->image;
+  }
+
+};
 
 bool readArguments ( int argc,char **argv )
 {
     if (argc<2) {
         cerr<< "Invalid number of arguments" <<endl;
-        cerr<< "Usage: (in.avi|live) [intrinsics.yml] [size]" <<endl;
+        cerr<< "Usage: (in.avi|live|copy) [intrinsics.yml] [size]" <<endl;
         return false;
     }
     TheInputVideo=argv[1];
@@ -67,7 +115,6 @@ bool readArguments ( int argc,char **argv )
         TheIntrinsicFile=argv[2];
     if (argc>=4)
         TheMarkerSize=atof(argv[3]);
-
     if (argc==3)
         cerr<< "NOTE: You need makersize to see 3d info!!!!" <<endl;
     return true;
@@ -80,16 +127,17 @@ int main(int argc,char **argv)
         if (readArguments (argc,argv)==false) {
             return 0;
         }
-        // Parse arguments
-        ;
         // Read from camera or from  file
-        if (TheInputVideo=="live") {
+        if (TheInputVideo == "live") {
             TheVideoCapturer.open(0);
             waitTime=10;
         }
+        if (TheInputVideo == "copy") {
+            printf("Starting using ROS Image stream! \n");
+        }
         else  TheVideoCapturer.open(TheInputVideo);
         // Check video is open
-        if (!TheVideoCapturer.isOpened()) {
+        if (!TheVideoCapturer.isOpened() && TheInputVideo != "copy") {
             cerr<<"Could not open video"<<endl;
             return -1;
         }
@@ -101,7 +149,19 @@ int main(int argc,char **argv)
         ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("aruco_pose", 100);
         tf::TransformBroadcaster broadcaster;
 	// Read first image to get the dimensions
-        TheVideoCapturer>>TheInputImage;
+        ImageConverter ic;
+        if (TheInputVideo != "copy") {
+            printf("Getting images from camera or video file... \n");
+            TheVideoCapturer>>TheInputImage;
+        }
+        else {
+             while (ic.getCurrentImage().size().width == 0) {
+                printf("Waiting for input image from ar_follow...\n");
+                usleep(500000);
+                ros::spinOnce();
+             }
+             TheInputImage = ic.getCurrentImage();
+        }
         // Read camera parameters if passed
         if (TheIntrinsicFile!="") {
             TheCameraParameters.readFromXMLFile(TheIntrinsicFile);
@@ -122,9 +182,15 @@ int main(int argc,char **argv)
         char key=0;
         int index=0;
         // Capture until press ESC or until the end of the video
-        while ( key!=27 && TheVideoCapturer.grab())
+        while (key!=27 && ros::ok())
         {
-            TheVideoCapturer.retrieve( TheInputImage);
+            ros::spinOnce();
+            if (TheInputVideo=="live") {
+               TheVideoCapturer.retrieve(TheInputImage);
+            }
+            else {
+                TheInputImage = ic.getCurrentImage();
+            }
             // Copy image
             index++; // Number of images captured
             double tick = (double)getTickCount();// For checking the speed
@@ -144,8 +210,8 @@ int main(int argc,char **argv)
 		cout << "RVEC:" << TheMarkers[i].Rvec << endl;
             }
             */
-	    if ( (TheMarkers.size()>0) && (ros::ok()) )  {
-		float x_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[0];
+            if ( (TheMarkers.size()>0) && (ros::ok()) )  {
+                float x_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[0];
 		float y_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[1];
 		float z_t = TheMarkers[0].Tvec.at<Vec3f>(0,0)[2];
                 cv::Mat rot_mat(3,3,cv::DataType<float>::type);
@@ -176,7 +242,6 @@ int main(int argc,char **argv)
                 geometry_msgs::Quaternion p_quat = tf::createQuaternionMsgFromRollPitchYaw(roll-r_off, pitch+p_off, yaw-y_off);
 		msg.orientation = p_quat;
                 pose_pub.publish(msg);
-      	    	ros::spinOnce();
     	        loop_rate.sleep();
             }
 	    // Print other rectangles that contains no valid markers
@@ -185,7 +250,7 @@ int main(int argc,char **argv)
                 m.draw(TheInputImageCopy,cv::Scalar(255,0,0));
             }*/
             // Draw a 3d cube in each marker if there is 3d info
-            if (  TheCameraParameters.isValid())
+            if (TheCameraParameters.isValid())
                 for (unsigned int i=0;i<TheMarkers.size();i++) {
                     CvDrawingUtils::draw3dCube(TheInputImageCopy,TheMarkers[i],TheCameraParameters);
                     CvDrawingUtils::draw3dAxis(TheInputImageCopy,TheMarkers[i],TheCameraParameters);
@@ -197,9 +262,8 @@ int main(int argc,char **argv)
             cv::imshow("thres",MDetector.getThresholdedImage());
             key=cv::waitKey(waitTime);
         }
-    } catch (std::exception &ex)
-    {
-        cout<<"Exception :"<<ex.what()<<endl;
+    } catch (std::exception &ex) {
+            cout<<"Exception :"<<ex.what()<<endl;
     }
 }
 
