@@ -271,7 +271,9 @@ int main(int argc,char **argv)
 		tf::TransformBroadcaster broadcaster;
 		// Read first image to get the dimensions
 		ImageConverter ic;
-		while (ic.getCurrentImage().size().width == 0) {
+                char key=0;
+                int index=0;
+		while (ic.getCurrentImage().size().width == 0 && key!=27) {
 		      printf("Waiting for input image from ar_follow...\n");
 		      usleep(50000);
 		      ros::spinOnce();
@@ -294,8 +296,6 @@ int main(int argc,char **argv)
 		iThresParam2=ThresParam2;
 		cv::createTrackbar("ThresParam1", "INPUT IMAGE",&iThresParam1, 13, cvTackBarEvents);
 		cv::createTrackbar("ThresParam2", "INPUT IMAGE",&iThresParam2, 13, cvTackBarEvents);
-		char key=0;
-		int index=0;
 		// Capture until press ESC or until the end of the video
 		while (key!=27 && ros::ok())
 		{
