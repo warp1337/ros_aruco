@@ -4,7 +4,7 @@ project(ros_aruco)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp tf std_msgs sensor_msgs geometry_msgs message_generation genmsg)
+find_package(catkin REQUIRED COMPONENTS roscpp tf std_msgs sensor_msgs geometry_msgs message_generation genmsg cv_bridge image_transport)
 
 ## TODO: Make this configurable via variable
 SET(CMAKE_MODULE_PATH ${ARUCO_PATH}/lib/cmake )
