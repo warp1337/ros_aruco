@@ -171,14 +171,14 @@ int main(int argc,char **argv)
         if (ThePyrDownLevel>0)
             MDetector.pyrDown(ThePyrDownLevel);
         // Create gui
-	cv::namedWindow("thres",1);
-        cv::namedWindow("in",1);
+	cv::namedWindow("THRESHOLD IMAGE",1);
+        cv::namedWindow("INPUT IMAGE",1);
         MDetector.getThresholdParams( ThresParam1,ThresParam2);
         MDetector.setCornerRefinementMethod(MarkerDetector::LINES);
         iThresParam1=ThresParam1;
         iThresParam2=ThresParam2;
-	cv::createTrackbar("ThresParam1", "in",&iThresParam1, 13, cvTackBarEvents);
-        cv::createTrackbar("ThresParam2", "in",&iThresParam2, 13, cvTackBarEvents);
+	cv::createTrackbar("ThresParam1", "INPUT IMAGE",&iThresParam1, 13, cvTackBarEvents);
+        cv::createTrackbar("ThresParam2", "INPUT IMAGE",&iThresParam2, 13, cvTackBarEvents);
         char key=0;
         int index=0;
         // Capture until press ESC or until the end of the video
@@ -258,8 +258,8 @@ int main(int argc,char **argv)
             // DONE! Easy, right?
             // cout<<endl<<endl<<endl;
             // Show input with augmented information and  the thresholded image
-	    cv::imshow("in",TheInputImageCopy);
-            cv::imshow("thres",MDetector.getThresholdedImage());
+	    cv::imshow("INPUT IMAGE",TheInputImageCopy);
+            cv::imshow("THRESHOLD IMAGE",MDetector.getThresholdedImage());
             key=cv::waitKey(waitTime);
         }
     } catch (std::exception &ex) {
@@ -289,6 +289,6 @@ void cvTackBarEvents(int pos,void*)
         for (unsigned int i=0;i<TheMarkers.size();i++)
             CvDrawingUtils::draw3dCube(TheInputImageCopy,TheMarkers[i],TheCameraParameters);
 
-    cv::imshow("in",TheInputImageCopy);
-    cv::imshow("thres",MDetector.getThresholdedImage());
+    cv::imshow("INPUT IMAGE",TheInputImageCopy);
+    cv::imshow("THRESHOLD IMAHE",MDetector.getThresholdedImage());
 }
