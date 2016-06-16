@@ -47,13 +47,13 @@ or implied, of Rafael Muñoz Salinas.
 #include "ros/ros.h"
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 
 using namespace aruco;
 using namespace cv;
-
 
 cv::Mat current_image_copy;
 cv::Mat current_image;
@@ -200,6 +200,7 @@ int main(int argc,char **argv) {
 
 	// Publish pose message and buffer up to 100 messages
 	ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("aruco_pose", 10);
+    ros::Publisher pose_pub_stamped = n.advertise<geometry_msgs::PoseStamped>("aruco_pose_stampd", 10);
 	tf::TransformBroadcaster broadcaster;
 
 	// Capture until press ESC or until the end of the video
@@ -250,12 +251,12 @@ int main(int argc,char **argv) {
             printf( "Dist. >> x_d:%5.1f  y_d:%5.1f   z_d:%5.1f \n", x_t, y_t, z_t);
 
             geometry_msgs::Pose msg;
+            geometry_msgs::PointStamped msg_ps;
 
             if (ros::ok()) {
                 // Publish TF message including the offsets
                 tf::Quaternion quat = tf::createQuaternionFromRPY(roll-p_off, pitch+p_off, yaw-y_off);
                 broadcaster.sendTransform(tf::StampedTransform(tf::Transform(quat, tf::Vector3(x_t, y_t, z_t)), ros::Time::now(),"camera", "marker"));
-
                 // Now publish the pose message, remember the offsets
                 msg.position.x = x_t;
                 msg.position.y = y_t;
@@ -263,6 +264,13 @@ int main(int argc,char **argv) {
                 geometry_msgs::Quaternion p_quat = tf::createQuaternionMsgFromRollPitchYaw(roll-r_off, pitch+p_off, yaw-y_off);
                 msg.orientation = p_quat;
                 pose_pub.publish(msg);
+
+                // Now publish the pose message stamped, remember the offsets
+                msg_ps.header.stamp = timestamp;
+                msg_ps.point.x = x_t;
+                msg_ps.point.y = y_t;
+                msg_ps.point.z = z_t;
+                pose_pub_stamped.publish(msg_ps);
             }
         }
 
