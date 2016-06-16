@@ -93,7 +93,7 @@ public:
   ImageConverter() : it_(nh_)
   {
     // subscribe to input video feed and publish output video feed
-    image_sub_ = it_.subscribe("/usb_cam/image_raw", 1, &ImageConverter::imageCb, this);
+    image_sub_ = it_.subscribe("/cam0/image_mono", 1, &ImageConverter::imageCb, this);
   }
 
   ~ImageConverter()
@@ -150,7 +150,7 @@ bool readArguments ( int argc,char **argv )
     if (argc>=4)
         TheMarkerSize=atof(argv[3]);
     if (argc==3)
-        cerr<< ">>> NOTE: You neesd makersize to see 3d info!" <<endl;
+        cerr<< ">>> NOTE: You need makersize to see 3d info!" <<endl;
 
     return true;
 
