@@ -254,9 +254,11 @@ int main(int argc,char **argv) {
             geometry_msgs::PointStamped msg_ps;
 
             if (ros::ok()) {
+
                 // Publish TF message including the offsets
                 tf::Quaternion quat = tf::createQuaternionFromRPY(roll-p_off, pitch+p_off, yaw-y_off);
                 broadcaster.sendTransform(tf::StampedTransform(tf::Transform(quat, tf::Vector3(x_t, y_t, z_t)), ros::Time::now(),"camera", "marker"));
+
                 // Now publish the pose message, remember the offsets
                 msg.position.x = x_t;
                 msg.position.y = y_t;
