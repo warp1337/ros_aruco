@@ -117,7 +117,6 @@ public:
   {
     ros::Time frame_time = ros::Time::now();
     timestamp = frame_time;
-    r_mutex.lock();
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
@@ -129,6 +128,7 @@ public:
       r_mutex.unlock();
       return;
     }
+    r_mutex.lock();
     src_img = cv_ptr->image;
     r_mutex.unlock();
   }
