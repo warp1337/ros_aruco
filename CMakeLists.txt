@@ -16,7 +16,8 @@ find_package(OpenCV REQUIRED )
 
 INCLUDE(FindPkgConfig)
 
-set(ROS_BUILD_TYPE Debug)
+SET(ROS_BUILD_TYPE Release)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -march=core-avx-i -O2")
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
