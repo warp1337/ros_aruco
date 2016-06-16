@@ -238,7 +238,7 @@ int main(int argc,char **argv) {
             roll  = -atan2(rot_mat.at<float>(0,2), rot_mat.at<float>(1,2));
 
         } else {
-            printf(">>> Marker _NOT_ found\n");
+            // printf(">>> Marker _NOT_ found\n");
             usleep(2000);
             continue;
         }
