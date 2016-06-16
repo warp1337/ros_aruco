@@ -48,6 +48,8 @@ or implied, of Rafael Muñoz Salinas.
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PointStamped.h>
+#include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/Marker.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -198,9 +200,9 @@ int main(int argc,char **argv) {
 
 	char key=0;
 
-	// Publish pose message and buffer up to 100 messages
-	ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("aruco_pose", 10);
-    ros::Publisher pose_pub_stamped = n.advertise<geometry_msgs::PointStamped>("aruco_point_stamped", 10);
+	ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("aruco/pose", 1);
+    // ros::Publisher pose_pub_stamped = n.advertise<geometry_msgs::PointStamped>("aruco_point_stamped", 1);
+    ros::Publisher pose_pub_markers = n.advertise<visualization_msgs::MarkerArray>("/aruco/markerarray", 1);
 	tf::TransformBroadcaster broadcaster;
 
 	// Capture until press ESC or until the end of the video
@@ -268,11 +270,27 @@ int main(int argc,char **argv) {
                 pose_pub.publish(msg);
 
                 // Now publish the pose message stamped, remember the offsets
-                msg_ps.header.stamp = timestamp;
-                msg_ps.point.x = x_t;
-                msg_ps.point.y = y_t;
-                msg_ps.point.z = z_t;
-                pose_pub_stamped.publish(msg_ps);
+                // msg_ps.header.stamp = timestamp;
+                // msg_ps.point.x = x_t;
+                // msg_ps.point.y = y_t;
+                // msg_ps.point.z = z_t;
+                // pose_pub_stamped.publish(msg_ps);
+
+                visualization_msgs::MarkerArray markers;
+                visualization_msgs::Marker m;
+                geometry_msgs::Pose pose;
+
+                m.id = 0;
+                m.header.frame_id = "aruco";
+                m.header.stamp = timestamp;
+                pose.position.x = x_t;
+                pose.position.y = y_t;
+                pose.position.z = z_t;
+                pose.orientation = p_quat;
+                m.pose = pose;
+                markers.markers.push_back(m);
+                pose_pub_markers.publish(markers);
+
             }
         }
 
