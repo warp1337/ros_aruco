@@ -47,7 +47,7 @@ or implied, of Rafael Muñoz Salinas.
 #include "ros/ros.h"
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PointStamped.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -200,7 +200,7 @@ int main(int argc,char **argv) {
 
 	// Publish pose message and buffer up to 100 messages
 	ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("aruco_pose", 10);
-    ros::Publisher pose_pub_stamped = n.advertise<geometry_msgs::PoseStamped>("aruco_pose_stampd", 10);
+    ros::Publisher pose_pub_stamped = n.advertise<geometry_msgs::PointStamped>("aruco_point_stamped", 10);
 	tf::TransformBroadcaster broadcaster;
 
 	// Capture until press ESC or until the end of the video
@@ -247,8 +247,8 @@ int main(int argc,char **argv) {
         // See: http://en.wikipedia.org/wiki/Flight_dynamics
         if (found) {
 
-            printf( "Angle >> roll:%5.1f pitch:%5.1f yaw:%5.1f \n", (roll-r_off)*(180.0/CV_PI), (pitch-p_off)*(180.0/CV_PI), (yaw-y_off)*(180.0/CV_PI));
-            printf( "Dist. >> x_d:%5.1f  y_d:%5.1f   z_d:%5.1f \n", x_t, y_t, z_t);
+            printf( "Angle >> roll: %5.1f pitch: %5.1f yaw: %5.1f \n", (roll-r_off)*(180.0/CV_PI), (pitch-p_off)*(180.0/CV_PI), (yaw-y_off)*(180.0/CV_PI));
+            printf( "Dist. >>  x_d: %5.1f   y_d: %5.1f z_d: %5.1f \n", x_t, y_t, z_t);
 
             geometry_msgs::Pose msg;
             geometry_msgs::PointStamped msg_ps;
